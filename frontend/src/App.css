@@ -36,3 +36,23 @@
     transform: rotate(360deg);
   }
 }
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  background: #0a0f1c;
+  height: 100%;
+}
+
+canvas {
+  outline: none;
+}
+.highlightLine {
+  background: rgba(0, 255, 255, 0.2);
+  border-left: 4px solid #00ffff;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #050b18, #02040a 80%);
+}
+

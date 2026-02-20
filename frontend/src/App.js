@@ -78,10 +78,6 @@ const runCode = async () => {
 /* ============================= ANALYZE ============================= */
 
 const analyzeCode = async () => {
-  if (language !== "python") {
-    alert("Static analysis supported only for Python.");
-    return;
-  }
 
   const res = await fetch("http://127.0.0.1:8000/analyze", {
     method: "POST",
@@ -202,7 +198,7 @@ return (
 
 {/* ================= ANALYSIS CARDS ================= */}
 
-{result && language === "python" && (
+{result && (
 <>
 <div style={cardStyle}><strong>Loop Depth:</strong> {result.loop_depth}</div>
 <div style={cardStyle}><strong>Recursive Functions:</strong> {result.recursive_functions?.join(", ") || "None"}</div>
@@ -228,21 +224,58 @@ return (
 
 <div style={{ height:"750px", marginTop:"40px" }}>
 <ForceGraph3D
-ref={graphRef}
-cooldownTicks={0}
-d3AlphaDecay={1}
-d3VelocityDecay={1}
-enableNodeDrag={false}
-graphData={{ nodes: buildStructuredNodes(), links: result.cfg.edges }}
-nodeThreeObject={(node)=>{
-  const geo = new THREE.BoxGeometry(140, 40, 6);
-  const mat = new THREE.MeshBasicMaterial({ color: getColor(node.type) });
-  return new THREE.Mesh(geo, mat);
-}}
-linkColor={()=>"#00f0ff"}
-linkWidth={4}
-linkDirectionalArrowLength={8}
-backgroundColor="#0b1020"
+  ref={graphRef}
+
+  enableNodeDrag={false}
+  enableNavigationControls={true}
+
+  graphData={{
+    nodes: result.cfg.nodes.map((n, index) => ({
+      id: n.id,
+      name: n.label,
+      lineno: n.lineno,
+      type: getNodeType(n.label),
+
+      // ✅ Proper structured vertical layout
+      fx: 0,
+      fy: -index * 120,
+      fz: 0
+    })),
+    links: result.cfg.edges
+  }}
+
+  nodeThreeObject={(node) => {
+    const geometry = new THREE.SphereGeometry(12, 32, 32);
+    const material = new THREE.MeshStandardMaterial({
+      color: getColor(node.type),
+      emissive: getColor(node.type),
+      emissiveIntensity: 0.5,
+      roughness: 0.4,
+      metalness: 0.1
+    });
+    return new THREE.Mesh(geometry, material);
+  }}
+
+  nodeLabel={node => `${node.name}\nLine: ${node.lineno || "-"}`}
+
+  /* ✅ Professional Links */
+  linkColor={() => "#00f0ff"}
+  linkWidth={3}
+  linkOpacity={1}
+  linkDirectionalArrowLength={6}
+  linkDirectionalArrowRelPos={1}
+  linkDirectionalParticles={2}
+  linkDirectionalParticleSpeed={0.002}
+
+  backgroundColor="#0b1020"
+
+  onEngineStop={() => {
+    graphRef.current.cameraPosition(
+      { x: 0, y: 0, z: 500 },
+      { x: 0, y: 0, z: 0 },
+      0
+    );
+  }}
 />
 </div>
 
